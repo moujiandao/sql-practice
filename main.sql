@@ -49,12 +49,12 @@ FROM sales;*/
 
 -- 4. Ranking --> Row_number() to rank sequentially, dense_rank() to retain rank numbers, rank() to skip over rank numbers
 -- In a real company database, you often need to find the top earners within each department rather than the whole company at once. To do this, we bring back the PARTITION BY clause we discussed earlier.
-WITH SalaryLeaderboard AS (
+/*WITH SalaryLeaderboard AS (
     SELECT emp_id, salary, dept_id, 
     DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) as salary_rank
     FROM employees
 )
-SELECT * FROM SalaryLeaderboard WHERE salary_rank <= 3;
+SELECT * FROM SalaryLeaderboard WHERE salary_rank <= 3;*/
 
 
 
