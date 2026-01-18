@@ -76,3 +76,14 @@ SELECT * FROM SalaryLeaderboard WHERE salary_rank <= 3;
 
 
 
+-- Meta: Recommendation System - You are given the list of Facebook friends and the list of Facebook pages that users follow. Your task is to create a new recommendation system for Facebook. For each Facebook user, find pages that this user doesn't follow but at least one of their friends does. Output the user ID and the ID of the page that should be recommended to this user.
+
+select distinct f.user_id, f.friend_id, s.page_id
+
+from users_friends as f JOIN users_pages as s ON f.friend_id = s.user_id
+
+WHERE (f.user_id, s.page_id) NOT IN (
+
+select user_id, page_id FROM users_pages 
+
+);
