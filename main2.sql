@@ -47,7 +47,7 @@ WITH ranked_skus AS (
         ROW_NUMBER() OVER (PARTITION BY sku ORDER BY uploaded_at DESC) as sku_rank
     FROM store_items
 )
-SELECT 
+SELECT -- Using SUM(CASE WHEN ...) is like using a pivot table to summarize data
     COUNT(*) as total_records,
     SUM(CASE WHEN sku_rank = 1 THEN 1 ELSE 0 END) as clean_records,
     SUM(CASE WHEN sku_rank > 1 THEN 1 ELSE 0 END) as eliminated_records,
