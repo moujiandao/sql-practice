@@ -70,6 +70,7 @@ select user_id, page_id FROM users_pages
 
 -- For simplicity, you can assume that every first name in the dataset is unique.
 
+-- customers
 -- id	first_name	last_name	city	address	phone_number
 -- 8	John	Joseph	San Francisco		928-386-8164
 -- 7	Jill	Michael	Austin		813-297-0692
@@ -77,6 +78,7 @@ select user_id, page_id FROM users_pages
 -- 5	Henry	Jackson	Miami		808-601-7513
 -- 13	Emma	Isaac	Miami		808-690-5201
 
+-- orders
 -- id	cust_id	order_date	order_details	total_order_cost
 -- 1	3	2019-03-04	Coat	100
 -- 2	3	2019-03-01	Shoes	80
@@ -109,6 +111,7 @@ SELECT * FROM customer_rankings WHERE customer_rank = 1;
 -- Users By Average Session Time
 -- Calculate each user's average session time, where a session is defined as the time difference between a page_load and a page_exit. Assume each user has only one session per day. If there are multiple page_load or page_exit events on the same day, use only the latest page_load and the earliest page_exit. Only consider sessions where the page_load occurs before the page_exit on the same day. Output the user_id and their average session time.
 
+-- facebook_web_log
 -- user_id	timestamp	action
 -- 0	2019-04-25 13:30:15	page_load
 -- 0	2019-04-25 13:30:18	page_load
@@ -132,7 +135,7 @@ group by date(timestamp), user_id, action)
 SELECT pl.user_id, avg(pe.earliest_page_exit - pl.latest_page_load) as avg_session_duration FROM facebook_earliest_page_load pl JOIN facebook_latest_page_exit pe ON 
 pl.date = pe.date AND pl.user_id = pe.user_id -- need to join on both id and date
 WHERE earliest_page_exit > latest_page_load
-GROUP BY pl.user_id
+GROUP BY pl.user_id -- we only group by user_id and do not group by date to get the average among all the dates.
 
 
 -- the optimal solution that scans the table once
@@ -152,4 +155,101 @@ FROM daily_sessions
 WHERE earliest_exit > latest_load
 GROUP BY user_id
 ORDER BY avg_session_time DESC;
- 
+
+
+-- Find the total number of available beds per hosts' nationality
+
+-- Output the nationality along with the corresponding total number of available beds.
+-- Sort records by the total available beds in descending order.
+
+-- airbnb_apartments
+-- host_id	apartment_id	apartment_type	n_beds	n_bedrooms	country	city
+-- 0	A1	Room	1	1	USA	New York
+-- 0	A2	Room	1	1	USA	New Jersey
+-- 0	A3	Room	1	1	USA	New Jersey
+-- 1	A4	Apartment	2	1	USA	Houston
+
+-- airbnb_hosts
+-- host_id	nationality	gender	age
+-- 0	USA	M	28
+-- 1	USA	F	29
+-- 2	China	F	31
+-- 3	China	M	24
+-- 4	Mali	M	30
+
+
+-- join the tables first
+-- aggregate the sum of n_beds
+-- group by nationality
+-- order by n_beds desc
+select ah.nationality, SUM(aa.n_beds) as total_available_beds
+from airbnb_hosts ah join airbnb_apartments aa on ah.host_id = aa.host_id
+group by ah.nationality
+order by total_available_beds desc; -- can reference alias @ or past groupby clause
+
+
+
+
+-- Ranking Hosts by total_available_beds
+-- Rank each host based on the number of beds they have listed. The host with the most beds should be ranked 1 and the host with the least number of beds should be ranked last. Hosts that have the same number of beds should have the same rank but there should be no gaps between ranking values. A host can also own multiple properties.
+-- Output the host ID, number of beds, and rank from highest rank to lowest.
+
+-- host_id	apartment_id	apartment_type	n_beds	n_bedrooms	country	city
+-- 0	A1	Room	1	1	USA	New York
+-- 0	A2	Room	1	1	USA	New Jersey
+-- 0	A3	Room	1	1	USA	New Jersey
+-- 1	A4	Apartment	2	1	USA	Houston
+-- 1	A5	Apartment	2	1	USA	Las Vegas
+-- 2	A6	Yurt	3	1	Mongolia	-
+-- 3	A7	Penthouse	3	3	China	Tianjin
+-- 3	A8	Penthouse	5	5	China	Beijing
+
+
+-- denserank window function
+with rankings_table as (
+select host_id, sum(n_beds) as total_beds,
+dense_rank() OVER (ORDER BY sum(n_beds) desc) as host_rank
+from airbnb_apartments
+group by host_id
+)
+
+-- select * from rankings_table order by host_rank desc;
+select * from rankings_table order by host_rank asc
+
+
+
+-- Top Posts per Channel
+-- Identify the top 3 posts with the highest like counts for each channel. Assign a rank to each post based on its like count, allowing for gaps in ranking when posts have the same number of likes. For example, if two posts tie for 1st place, the next post should be ranked 3rd, not 2nd. Exclude any posts with zero likes.
+
+-- The output should display the channel name, post ID, post creation date, and the like count for each post. Because there could be ties in rankings, your output could have more than 3 rows for each channel.
+
+-- posts
+-- post_id	channel_id	created_at	likes	shares	comments
+-- 101	1	2024-08-16	0	10	7
+-- 102	1	2024-08-07	0	18	6
+-- 103	1	2024-07-24	11	3	7
+
+-- channels
+-- channel_id	channel_name	channel_type
+-- 1	TechNews	news
+-- 2	GameStream	gaming
+-- 3	SocialBuzz	social_media
+
+
+-- -- join the tables
+-- -- use rank()
+-- -- where posts.likes > 0
+
+
+with posts_rankings as (select
+c.channel_name,
+p.post_id,
+p.created_at,
+p.likes,
+rank() over ( partition by c.channel_name order by p.likes desc ) as post_rank
+from posts p join channels c on p.channel_id = c.channel_id
+where p.likes > 0
+order by c.channel_name
+)
+
+select * from posts_rankings where post_rank in (1,2,3) order by channel_name, post_rank
