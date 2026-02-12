@@ -1,0 +1,11 @@
+# Editor settings
+.vscode/
+
+# Python virtual environment
+.venv/
+
+# macOS
+.DS_Store
+
+# Database session files
+*.session.sql
