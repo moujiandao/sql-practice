@@ -125,3 +125,22 @@ SELECT food_category, COUNT(*) AS product_count, SUM(inventory_value) AS total_i
 
 
 
+-- Clicked vs Nonclicked Search Results
+-- The question asks you to calculate two percentages based on search result records. For the first percentage, find the percentage of records where a search result was clicked on in the top 3 positions. Records that were clicked will have clicked = 1. Use the search_results_position to find the position of the search result. For the second percentage: find the percentage of records that were not clicked on in the top 3 positions. Both percentages are calculated with respect to the total number of search result records and should be output in the same row as two columns.
+
+-- search_id	search_term	clicked	search_results_position
+-- 1	rabbit	1	5
+-- 2	airline	1	4
+-- 2	quality	1	5
+
+
+-- percentage clicked in top 3 positions
+-- clicked = 1 means it got clicked, search_results_position <= 3 means it got clicked in top 3 positions
+-- find percentage clicked in top3 positions
+-- find percentage clicked not in the top3 positions
+
+select
+100.0* count(case when clicked = 1 and search_results_position <=3 then 1 end) / count(*) as percentage1, 
+100.0 * count(case when clicked = 0 and search_results_position <=3 then 1 end) / count(*) as percentage2 
+
+from fb_search_events

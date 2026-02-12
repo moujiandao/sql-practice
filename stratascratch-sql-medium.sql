@@ -253,3 +253,24 @@ order by c.channel_name
 )
 
 select * from posts_rankings where post_rank in (1,2,3) order by channel_name, post_rank
+
+
+
+
+-- Meta/Facebook Matching Users Pairs
+-- Find matching pairs of Meta/Facebook employees such that they are both of the same nation, different age, same gender, and at different seniority levels.
+-- Output ids of paired employees.
+
+-- id	location	age	gender	is_senior
+-- 0	USA	24	M	FALSE
+-- 1	USA	31	F	TRUE
+-- 2	USA	29	F	FALSE
+
+
+select *
+from facebook_employees a join facebook_employees b
+on a.location = b.location and
+a.age != b.age and
+a.gender= b.gender and
+a.is_senior != b.is_senior and
+a.id < b.id
